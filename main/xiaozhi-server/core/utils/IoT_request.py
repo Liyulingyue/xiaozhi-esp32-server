@@ -1,6 +1,6 @@
 import requests
 
-def get_IoT_status() -> str:
+def get_IoT_query(query: str) -> str:
     """从 IoT 获取, 并生成提示词"""
 
     # request

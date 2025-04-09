@@ -27,6 +27,11 @@ class Dialogue:
         """将消息放在对话的顶部"""
         self.dialogue.insert(0, message)
 
+    def pop(self):
+        """删除对话的底部消息"""
+        if len(self.dialogue) > 0:
+            self.dialogue.pop()
+
     def put(self, message: Message):
         self.dialogue.append(message)
 

@@ -27,7 +27,7 @@ from config.private_config import PrivateConfig
 from core.auth import AuthMiddleware, AuthenticationError
 from core.utils.auth_code_gen import AuthCodeGenerator
 from core.mcp.manager import MCPManager
-from core.utils.IoT_status import get_IoT_status
+from core.utils.IoT_request import get_IoT_query
 
 TAG = __name__
 
@@ -306,7 +306,10 @@ class ConnectionHandler:
             future.result()
             return True
 
-        self.dialogue.put(Message(role="user", content=query))
+        # 植入 iot
+        org_query = query
+        iot_query = get_IoT_query(query)
+        self.dialogue.put(Message(role="user", content=iot_query))
 
         response_message = []
         processed_chars = 0  # 跟踪已处理的字符位置
@@ -323,6 +326,9 @@ class ConnectionHandler:
                 self.session_id, self.dialogue.get_llm_dialogue_with_memory(memory_str)
             )
         except Exception as e:
+            # 恢复现场
+            self.dialogue.pop()
+            self.dialogue.put(Message(role="user", content=org_query))
             self.logger.bind(tag=TAG).error(f"LLM 处理出错 {query}: {e}")
             return None
 
@@ -378,6 +384,11 @@ class ConnectionHandler:
                 self.tts_queue.put(future)
 
         self.llm_finish_task = True
+
+        # 恢复现场
+        self.dialogue.pop()
+        self.dialogue.put(Message(role="user", content=org_query))
+
         self.dialogue.put(Message(role="assistant", content="".join(response_message)))
         self.logger.bind(tag=TAG).debug(
             json.dumps(self.dialogue.get_llm_dialogue(), indent=4, ensure_ascii=False)
@@ -394,9 +405,6 @@ class ConnectionHandler:
             )
             future.result()
             return True
-
-        # 临时插入 IoT 信息, 在对话结束时清除
-        self.dialogue.put_top(Message(role="system", content=get_IoT_status()))
 
         if not tool_call:
             self.dialogue.put(Message(role="user", content=query))
@@ -426,7 +434,6 @@ class ConnectionHandler:
                 functions=functions,
             )
         except Exception as e:
-            self.dialogue.pop_top()
             self.logger.bind(tag=TAG).error(f"LLM 处理出错 {query}: {e}")
             return None
 
@@ -557,9 +564,6 @@ class ConnectionHandler:
                     self.speak_and_play, segment_text, text_index
                 )
                 self.tts_queue.put(future)
-
-        # 清理 IoT 临时加入的系统信息
-        self.dialogue.pop_top()
 
         # 存储对话内容
         if len(response_message) > 0:
