@@ -39,10 +39,7 @@ async def handleAudioMessage(conn, audio):
                 conn.asr_audio, conn.session_id
             )
             logger.bind(tag=TAG).info(f"识别文本: {text}")
-            if text is None:
-                text_len = 0
-            else:
-                text_len, _ = remove_punctuation_and_length(text)
+            text_len, _ = remove_punctuation_and_length(text)
             if text_len > 0:
                 await startToChat(conn, text)
             else:
