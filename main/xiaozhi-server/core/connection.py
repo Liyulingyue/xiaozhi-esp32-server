@@ -307,10 +307,9 @@ class ConnectionHandler:
             return True
 
         # 植入 iot
-        org_system_prompt = self.dialogue.get_system_message().content
-        self.dialogue.update_system_message(f"{org_system_prompt}{get_IoT_query(query)}")
-
-        self.dialogue.put(Message(role="user", content=query))
+        org_query = query
+        iot_query = get_IoT_query(query)
+        self.dialogue.put(Message(role="user", content=iot_query))
 
         response_message = []
         processed_chars = 0  # 跟踪已处理的字符位置
@@ -328,7 +327,8 @@ class ConnectionHandler:
             )
         except Exception as e:
             # 恢复现场
-            self.dialogue.update_system_message(org_system_prompt)
+            self.dialogue.pop()
+            self.dialogue.put(Message(role="user", content=org_query))
             self.logger.bind(tag=TAG).error(f"LLM 处理出错 {query}: {e}")
             return None
 
@@ -386,7 +386,8 @@ class ConnectionHandler:
         self.llm_finish_task = True
 
         # 恢复现场
-        self.dialogue.update_system_message(org_system_prompt)
+        self.dialogue.pop()
+        self.dialogue.put(Message(role="user", content=org_query))
 
         self.dialogue.put(Message(role="assistant", content="".join(response_message)))
         self.logger.bind(tag=TAG).debug(
@@ -406,10 +407,9 @@ class ConnectionHandler:
             return True
 
         # 植入 iot
-        org_system_prompt = self.dialogue.get_system_message().content
-        self.dialogue.update_system_message(f"{org_system_prompt}{get_IoT_query(query)}")
-
-        self.dialogue.put(Message(role="user", content=query))
+        org_query = query
+        iot_query = get_IoT_query(query)
+        self.dialogue.put(Message(role="user", content=iot_query))
 
         if not tool_call:
             self.dialogue.put(Message(role="user", content=query))
@@ -440,7 +440,8 @@ class ConnectionHandler:
             )
         except Exception as e:
             # 恢复现场
-            self.dialogue.update_system_message(org_system_prompt)
+            self.dialogue.pop()
+            self.dialogue.put(Message(role="user", content=org_query))
             self.logger.bind(tag=TAG).error(f"LLM 处理出错 {query}: {e}")
             return None
 
@@ -573,7 +574,8 @@ class ConnectionHandler:
                 self.tts_queue.put(future)
 
         # 恢复现场
-        self.dialogue.update_system_message(org_system_prompt)
+        self.dialogue.pop()
+        self.dialogue.put(Message(role="user", content=org_query))
 
         # 存储对话内容
         if len(response_message) > 0:
