@@ -49,15 +49,10 @@ class Dialogue:
             self.getMessages(m, dialogue)
         return dialogue
 
-    def get_system_message(self) -> Message | None:
-        """获取系统消息"""
-        system_msg = next((msg for msg in self.dialogue if msg.role == "system"), None)
-        return system_msg
-
     def update_system_message(self, new_content: str):
         """更新或添加系统消息"""
         # 查找第一个系统消息
-        system_msg = self.get_system_message()
+        system_msg = next((msg for msg in self.dialogue if msg.role == "system"), None)
         if system_msg:
             system_msg.content = new_content
         else:
