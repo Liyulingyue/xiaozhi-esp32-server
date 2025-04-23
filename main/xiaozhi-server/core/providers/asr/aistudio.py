@@ -112,7 +112,7 @@ class ASRProvider(ASRProviderBase):
         """将语音数据转换为文本"""
         if not opus_data:
             logger.bind(tag=TAG).warn("音频数据为空！")
-            return None, None
+            return "", None
 
         try:
             # 将Opus音频数据解码为PCM
@@ -131,4 +131,4 @@ class ASRProvider(ASRProviderBase):
 
         except Exception as e:
             logger.bind(tag=TAG).error(f"处理音频时发生错误！{e}", exc_info=True)
-            return None, None
+            return "", None
