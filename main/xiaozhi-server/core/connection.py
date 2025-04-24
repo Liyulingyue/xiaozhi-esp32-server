@@ -306,11 +306,14 @@ class ConnectionHandler:
             future.result()
             return True
 
+        self.logger.bind(tag=TAG).info("开始修改系统提示词")
         # 植入 iot
         org_system_prompt = self.dialogue.get_system_message().content
         self.dialogue.update_system_message(f"{org_system_prompt}{get_IoT_query(query)}")
 
         self.dialogue.put(Message(role="user", content=query))
+        self.logger.bind(tag=TAG).info("修改系统提示词结束")
+        self.logger.bind(tag=TAG).debug(f"消息列表: {self.dialogue.dialogue}")
 
         response_message = []
         processed_chars = 0  # 跟踪已处理的字符位置
@@ -405,11 +408,14 @@ class ConnectionHandler:
             future.result()
             return True
 
+        self.logger.bind(tag=TAG).info("开始修改系统提示词")
         # 植入 iot
         org_system_prompt = self.dialogue.get_system_message().content
         self.dialogue.update_system_message(f"{org_system_prompt}{get_IoT_query(query)}")
 
         self.dialogue.put(Message(role="user", content=query))
+        self.logger.bind(tag=TAG).info("修改系统提示词结束")
+        self.logger.bind(tag=TAG).debug(f"消息列表: {self.dialogue.dialogue}")
 
         if not tool_call:
             self.dialogue.put(Message(role="user", content=query))
